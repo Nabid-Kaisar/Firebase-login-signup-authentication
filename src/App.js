@@ -1,26 +1,73 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from "react";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import Login from "./Login";
+import SignUp from "./SignUp";
+import MainPage from "./MainPage";
+import Loading from "./Loading";
+
+import "./App.css";
+
+import { firebase } from "@firebase/app";
+import "@firebase/auth";
+
+var app = firebase.initializeApp({
+  apiKey: "AIzaSyBSmyJLAZ2fqN7Crx5U2H51Z7wxWV-8-vI",
+  authDomain: "invitefirebase.firebaseapp.com",
+  databaseURL: "https://invitefirebase.firebaseio.com",
+  projectId: "invitefirebase",
+  storageBucket: "invitefirebase.appspot.com",
+  messagingSenderId: "316478676860",
+  appId: "1:316478676860:web:6587c08005c11433"
+});
+
+export default class App extends Component {
+  state = {
+    isLoggedIn: 2
+  };
+
+  changeLoginStatus = async () => {
+    const user = await firebase.auth().currentUser;
+    //if not logged in user will return null..
+
+    if (user) {
+      this.setState({ isLoggedIn: 1 });
+    } else {
+      this.setState({ isLoggedIn: 0 });
+    }
+  };
+
+  registerOnAuthChange = () => {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        this.setState({ isLoggedIn: 1 });
+      } else {
+        this.setState({ isLoggedIn: 0 });
+      }
+    });
+  };
+
+  componentDidMount = () => {
+    this.registerOnAuthChange();
+  };
+
+  changeLoginState = status => {
+    //status 0-> not loggedin, 1-> loggedIN, 2-> process
+    this.setState({ isLoggedIn: status });
+  };
+
+  render() {
+    let { isLoggedIn } = this.state;
+    if (isLoggedIn === 2) {
+      return <Loading />;
+    } else if (isLoggedIn === 1) {
+      return <MainPage changeLoginState={this.changeLoginState} />;
+    } else if (isLoggedIn === 0) {
+      return (
+        <div className="App">
+          <Login changeLoginState={this.changeLoginState} />
+          <SignUp />
+        </div>
+      );
+    } else return <Loading />;
+  }
 }
-
-export default App;
