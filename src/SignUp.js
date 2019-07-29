@@ -10,7 +10,11 @@ export default class SignUp extends Component {
     loginMsg: "",
     phone: "",
     nick: "",
-    file: {}
+    vCode: "",
+    resToken: "",
+    file: {},
+    promptVerCode: false,
+    confirmationResult: {}
   };
 
   handleEmail = e => {
@@ -29,16 +33,55 @@ export default class SignUp extends Component {
     this.setState({ nick: e.target.value });
   };
 
+  handleVCode = e => {
+    this.setState({ vCode: e.target.value });
+  };
+
   handleFile = e => {
     this.setState({ file: e.target.value });
   };
 
   updateProfileInfo = () => {
     firebase.auth().onAuthStateChanged(user => {
+      console.log("onauth");
       if (user) {
         user.updateProfile({
           displayName: this.state.nick
         });
+
+        var appVerifier = window.recaptchaVerifier;
+        if (this.state.phone !== "" && appVerifier) {
+          console.log(this.state.phone);
+          console.log(appVerifier);
+          firebase
+            .auth()
+            .signInWithPhoneNumber(this.state.phone, appVerifier)
+            .then(async confirmationResult => {
+              this.setState(
+                {
+                  confirmationResult
+                },
+                () => {
+                  this.setState({ promptVerCode: true });
+                }
+              );
+            })
+            .catch(error => {
+              // Error; SMS not sent
+              console.log(error);
+            });
+
+          var provider = new firebase.auth.PhoneAuthProvider();
+          provider
+            .verifyPhoneNumber(this.state.phone, this.state.resToken)
+            .then(verificationId => {
+              var cred = firebase.auth.PhoneAuthProvider.credential(
+                verificationId,
+                this.state.vCode
+              );
+              user.updatePhoneNumber({ cred });
+            });
+        }
       }
     });
   };
@@ -55,13 +98,22 @@ export default class SignUp extends Component {
           console.log("cant register with that username / password");
           // ...
         });
+
       if (signUpData) {
         //successful
+        this.updateProfileInfo();
+
         console.log(signUpData);
       }
     } else {
       console.log("input fields cant be empty ");
     }
+  };
+
+  handleCodeSubmit = () => {
+    this.state.confirmationResult.confirm(this.state.vCode).then(res => {
+      console.log(res);
+    })
   };
 
   loginStatusCheck = () => {
@@ -83,12 +135,45 @@ export default class SignUp extends Component {
   };
 
   componentDidMount() {
-    this.updateProfileInfo();
+    // this.updateProfileInfo();
+    
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+      "recaptcha-container",
+      {
+        size: "normal",
+        callback: response => {
+          this.setState({ resToken: response });
+        },
+        "expired-callback": () => {
+          // Response expired. Ask user to solve reCAPTCHA again.
+          // ...
+          console.log("expired");
+        }
+      }
+    );
+    window.recaptchaVerifier.render().then(r => {
+      window.recaptchaWidgetId = r;
+    });
   }
 
   render() {
+    const codeElem = (
+      <div>
+        <span className="small-margin small-mr">CODE : </span>
+        <input
+          className="small-margin"
+          type="text"
+          onChange={this.handleVCode}
+        />
+
+        <button onClick={this.handleCodeSubmit}> Submit </button>
+        <br />
+      </div>
+    );
+
     return (
       <React.Fragment>
+        <div ref={capt => (this.recapt = capt)} id="recaptcha-container" />
         <h1 className="large bold title-margin">Sign up </h1>
         <span className="small-margin small-mr">Email : </span>
         <input
@@ -128,6 +213,7 @@ export default class SignUp extends Component {
           onChange={this.handleFile}
         />
         <br />
+        {this.state.promptVerCode ? codeElem : null}
 
         <button onClick={this.handleSignUp}>Sign Up</button>
         <div>{this.state.loginMsg}</div>

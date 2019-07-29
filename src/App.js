@@ -40,7 +40,7 @@ export default class App extends Component {
   };
 
   componentDidMount = () => {
-    this.registerOnAuthChange();
+    // this.registerOnAuthChange();
   };
 
   changeLoginState = status => {
@@ -52,17 +52,18 @@ export default class App extends Component {
 
   render() {
     let { isLoggedIn } = this.state;
-    if (isLoggedIn === 2) {
-      return <Loading />;
-    } else if (isLoggedIn === 1) {
-      return <MainPage changeLoginState={this.changeLoginState} />;
-    } else if (isLoggedIn === 0) {
-      return (
-        <div className="App">
-          <Login changeLoginState={this.changeLoginState} />
-          <SignUp />
-        </div>
-      );
-    } else return <Loading />;
-  }
-}
+  //   if (isLoggedIn === 2) {
+  //     return <Loading />;
+  //   } else if (isLoggedIn === 1) {
+  //     return <MainPage changeLoginState={this.changeLoginState} />;
+  //   } else if (isLoggedIn === 0) {
+  //     return (
+  //       <div className="App">
+  //         <Login changeLoginState={this.changeLoginState} />
+  //         <SignUp />
+  //       </div>
+  //     );
+  //   } else return <Loading />;
+  // }
+  return <SignUp />;
+}}
