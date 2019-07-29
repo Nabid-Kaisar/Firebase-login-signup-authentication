@@ -25,18 +25,22 @@
   font-size: 24px;
 }
 
-.underlined{
+.underlined {
   text-decoration: underline;
 }
 
-.comp-margin{
+.comp-margin {
   margin-bottom: 55px;
 }
 
-.title-margin{
+.title-margin {
   margin-bottom: 12px;
 }
 
-.small-margin{
+.small-margin {
   margin-bottom: 7px;
+}
+
+.small-mr {
+  margin-right: 30px;
 }

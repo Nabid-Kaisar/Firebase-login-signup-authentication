@@ -67,15 +67,24 @@ export default class Login extends Component {
   render() {
     return (
       <React.Fragment>
-        <div className="large bold underlined title-margin">Login using firebase auth:</div>
-        <div>Email</div>
-        <input type="text" onChange={this.handleEmail} />
-
-        <div>Password</div>
-
-        <input type="password" onChange={this.handlePassword} />
+        <h1 className="large bold title-margin">Login using firebase auth:</h1>
+        <span className="small-margin small-mr">Email : </span>
+        <input
+          className="small-margin"
+          type="text"
+          onChange={this.handleEmail}
+        />
         <br />
-        <button onClick={this.handleLogin}>Login</button>
+        <span className="small-margin">Password : </span>
+        <input
+          className="small-margin"
+          type="password"
+          onChange={this.handlePassword}
+        />
+        <br />
+        <button className="small-margin" onClick={this.handleLogin}>
+          Login
+        </button>
         <div>{this.state.loginMsg}</div>
         <button className="comp-margin" onClick={this.loginStatusCheck}>
           Login status check

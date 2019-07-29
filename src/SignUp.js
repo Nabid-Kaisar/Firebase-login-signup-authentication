@@ -7,7 +7,10 @@ export default class SignUp extends Component {
   state = {
     email: "",
     passWord: "",
-    loginMsg: ""
+    loginMsg: "",
+    phone: "",
+    nick: "",
+    file: {}
   };
 
   handleEmail = e => {
@@ -16,6 +19,28 @@ export default class SignUp extends Component {
 
   handlePassword = e => {
     this.setState({ passWord: e.target.value });
+  };
+
+  handlePhone = e => {
+    this.setState({ phone: e.target.value });
+  };
+
+  handleNick = e => {
+    this.setState({ nick: e.target.value });
+  };
+
+  handleFile = e => {
+    this.setState({ file: e.target.value });
+  };
+
+  updateProfileInfo = () => {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        user.updateProfile({
+          displayName: this.state.nick
+        });
+      }
+    });
   };
 
   handleSignUp = async () => {
@@ -57,20 +82,53 @@ export default class SignUp extends Component {
       });
   };
 
+  componentDidMount() {
+    this.updateProfileInfo();
+  }
+
   render() {
     return (
       <React.Fragment>
-        <div className="large bold underlined title-margin">Sign up </div>
-        <span className="small-margin">Email: </span>
-        <input  className="small-margin" type="text" onChange={this.handleEmail} />
+        <h1 className="large bold title-margin">Sign up </h1>
+        <span className="small-margin small-mr">Email : </span>
+        <input
+          className="small-margin"
+          type="text"
+          onChange={this.handleEmail}
+        />
         <br />
-        <span className="small-margin">Password:</span>
+        <span className="small-margin">Password : </span>
         <input
           className="small-margin"
           type="password"
           onChange={this.handlePassword}
         />
         <br />
+
+        <span className="small-margin small-mr">Phone : </span>
+        <input
+          className="small-margin"
+          type="text"
+          onChange={this.handlePhone}
+        />
+        <br />
+
+        <span className="small-margin small-mr">NickName : </span>
+        <input
+          className="small-margin"
+          type="text"
+          onChange={this.handleNick}
+        />
+        <br />
+
+        <span className="small-margin small-mr">Image : </span>
+        <input
+          className="small-margin"
+          type="file"
+          onChange={this.handleFile}
+        />
+        <br />
+
         <button onClick={this.handleSignUp}>Sign Up</button>
         <div>{this.state.loginMsg}</div>
       </React.Fragment>

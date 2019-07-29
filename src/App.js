@@ -25,21 +25,14 @@ export default class App extends Component {
     isLoggedIn: 2
   };
 
-  changeLoginStatus = async () => {
-    const user = await firebase.auth().currentUser;
-    //if not logged in user will return null..
 
-    if (user) {
-      this.setState({ isLoggedIn: 1 });
-    } else {
-      this.setState({ isLoggedIn: 0 });
-    }
-  };
 
   registerOnAuthChange = () => {
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         this.setState({ isLoggedIn: 1 });
+        //update profile Info
+
       } else {
         this.setState({ isLoggedIn: 0 });
       }
@@ -51,7 +44,9 @@ export default class App extends Component {
   };
 
   changeLoginState = status => {
-    //status 0-> not loggedin, 1-> loggedIN, 2-> process
+    //status 0-> not loggedin,
+    // 1-> loggedIN,
+    // 2-> processing
     this.setState({ isLoggedIn: status });
   };
 

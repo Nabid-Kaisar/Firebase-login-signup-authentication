@@ -17,6 +17,7 @@ export default class MainPage extends Component {
   };
 
   render() {
+    console.log(firebase.auth().currentUser);
     return (
       <React.Fragment>
         <div>Successfully Logged in to the main page</div>
