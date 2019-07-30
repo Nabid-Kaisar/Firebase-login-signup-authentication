@@ -25,22 +25,32 @@ export default class App extends Component {
     isLoggedIn: 2
   };
 
-
-
   registerOnAuthChange = () => {
-    firebase.auth().onAuthStateChanged(user => {
+    
+    this.fireBaseListener = firebase.auth().onAuthStateChanged(user => {
+      console.log("app");
+      console.log(user);
       if (user) {
-        this.setState({ isLoggedIn: 1 });
-        //update profile Info
+        if (user.phoneNumber) {
+          this.setState({ isLoggedIn: 1 });
+        }else{
+          this.setState({ isLoggedIn: 0 });
+        }
 
+        //update profile Info
       } else {
         this.setState({ isLoggedIn: 0 });
       }
     });
   };
 
+  componentWillUnmount() {
+    this.fireBaseListener && this.fireBaseListener();
+    this.authListener = undefined;
+  }
+
   componentDidMount = () => {
-    // this.registerOnAuthChange();
+    this.registerOnAuthChange();
   };
 
   changeLoginState = status => {
@@ -52,18 +62,20 @@ export default class App extends Component {
 
   render() {
     let { isLoggedIn } = this.state;
-  //   if (isLoggedIn === 2) {
-  //     return <Loading />;
-  //   } else if (isLoggedIn === 1) {
-  //     return <MainPage changeLoginState={this.changeLoginState} />;
-  //   } else if (isLoggedIn === 0) {
-  //     return (
-  //       <div className="App">
-  //         <Login changeLoginState={this.changeLoginState} />
-  //         <SignUp />
-  //       </div>
-  //     );
-  //   } else return <Loading />;
-  // }
-  return <SignUp />;
-}}
+    if (isLoggedIn === 2) {
+      return <Loading />;
+    } else if (isLoggedIn === 1) {
+      return <MainPage changeLoginState={this.changeLoginState} />;
+    } else if (isLoggedIn === 0) {
+      return (
+        <div className="App">
+          <Login changeLoginState={this.changeLoginState} />
+          <SignUp changeLoginState={this.changeLoginState} />
+        </div>
+      );
+    } else return <Loading />;
+    // }
+  }
+}
+
+//  return <SignUp />;

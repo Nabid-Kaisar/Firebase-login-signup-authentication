@@ -7,7 +7,10 @@ export default class Login extends Component {
   state = {
     email: "",
     passWord: "",
-    loginMsg: ""
+    loginMsg: "",
+    showOTPField: false,
+    wrongOtpMsg: "",
+    resToken: ""
   };
 
   handleEmail = e => {
@@ -18,11 +21,11 @@ export default class Login extends Component {
     this.setState({ passWord: e.target.value });
   };
 
-  handleLogin = () => {
-    this.props.changeLoginState(2);
+  handleLogin =  async () => {
+    this.props.changeLoginState(2); //loading..
     const { email, passWord } = this.state;
     if (email !== "" && passWord !== "") {
-      firebase
+      let loginData = await  firebase
         .auth()
         .signInWithEmailAndPassword(email, passWord)
         .catch(error => {
@@ -34,6 +37,11 @@ export default class Login extends Component {
           console.log(errorMessage, errorCode);
           console.error(error);
         });
+        if(loginData){
+          //login succcessful with email & pass.. now check otp
+          this.setState({ showOTPField: true });
+          console.log("loginData:",loginData);
+        }
     } else {
       console.log("input fields cant be empty ");
     }
@@ -43,9 +51,15 @@ export default class Login extends Component {
     firebase.auth().onAuthStateChanged(function(user) {
       //anytime a sign in state changed this callback fn will be invoked
       // changeLoginState(2);
+      console.log("login");
+      console.log(user);
       if (user) {
         // User is signed in.
-        changeLoginState(1);
+        if (user.phoneNumber) {
+          changeLoginState(1);
+        } else {
+          changeLoginState(0);
+        }
       } else {
         changeLoginState(0);
         console.log("no user");
@@ -60,12 +74,17 @@ export default class Login extends Component {
     console.log(user);
   };
 
+  componentWillUnmount() {
+    this.fireBaseListener && this.fireBaseListener();
+    this.authListener = undefined;
+  }
+
   componentDidMount = () => {
     this.registerOnStateChange(this.props.changeLoginState);
   };
 
   render() {
-    return (
+    const loginForm = (
       <React.Fragment>
         <h1 className="large bold title-margin">Login using firebase auth:</h1>
         <span className="small-margin small-mr">Email : </span>
@@ -91,5 +110,52 @@ export default class Login extends Component {
         </button>
       </React.Fragment>
     );
+
+    const codeElem = (
+      <div>
+        <span className="small-margin small-mr">CODE : </span>
+        <input
+          className="small-margin"
+          type="text"
+          onChange={this.handleVCode}
+        />
+
+        <button onClick={this.handleCodeSubmit}> Submit </button>
+        <br />
+      </div>
+    );
+
+    return (
+      <React.Fragment>
+        <div ref={capt => (this.recapt = capt)} id="recaptcha-container-login" />
+        {this.state.showOTPField ? codeElem : loginForm}
+        <h4>{this.state.wrongOtpMsg}</h4>
+      </React.Fragment>
+    );
   }
 }
+
+/* <React.Fragment>
+        <h1 className="large bold title-margin">Login using firebase auth:</h1>
+        <span className="small-margin small-mr">Email : </span>
+        <input
+          className="small-margin"
+          type="text"
+          onChange={this.handleEmail}
+        />
+        <br />
+        <span className="small-margin">Password : </span>
+        <input
+          className="small-margin"
+          type="password"
+          onChange={this.handlePassword}
+        />
+        <br />
+        <button className="small-margin" onClick={this.handleLogin}>
+          Login
+        </button>
+        <div>{this.state.loginMsg}</div>
+        <button className="comp-margin" onClick={this.loginStatusCheck}>
+          Login status check
+        </button>
+      </React.Fragment> */

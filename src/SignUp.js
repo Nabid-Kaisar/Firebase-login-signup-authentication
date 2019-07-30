@@ -7,14 +7,16 @@ export default class SignUp extends Component {
   state = {
     email: "",
     passWord: "",
-    loginMsg: "",
+    msg: "",
     phone: "",
     nick: "",
     vCode: "",
     resToken: "",
     file: {},
     promptVerCode: false,
-    confirmationResult: {}
+    confirmationResult: null,
+    showOTPField: false,
+    wrongOtpMsg: ""
   };
 
   handleEmail = e => {
@@ -42,8 +44,9 @@ export default class SignUp extends Component {
   };
 
   updateProfileInfo = () => {
-    firebase.auth().onAuthStateChanged(user => {
-      console.log("onauth");
+    this.fireBaseListener = firebase.auth().onAuthStateChanged(user => {
+      console.log("signup");
+      console.log(user);
       if (user) {
         user.updateProfile({
           displayName: this.state.nick
@@ -53,6 +56,7 @@ export default class SignUp extends Component {
         if (this.state.phone !== "" && appVerifier) {
           console.log(this.state.phone);
           console.log(appVerifier);
+
           firebase
             .auth()
             .signInWithPhoneNumber(this.state.phone, appVerifier)
@@ -94,6 +98,7 @@ export default class SignUp extends Component {
         .createUserWithEmailAndPassword(email, passWord)
         .catch(error => {
           // Handle Errors here.
+          this.setState({ msg: "signup failed" });
           console.error(error);
           console.log("cant register with that username / password");
           // ...
@@ -101,6 +106,8 @@ export default class SignUp extends Component {
 
       if (signUpData) {
         //successful
+        this.setState({ showOTPField: true });
+
         this.updateProfileInfo();
 
         console.log(signUpData);
@@ -111,9 +118,15 @@ export default class SignUp extends Component {
   };
 
   handleCodeSubmit = () => {
-    this.state.confirmationResult.confirm(this.state.vCode).then(res => {
-      console.log(res);
-    })
+    if (this.state.confirmationResult) {
+      this.state.confirmationResult.confirm(this.state.vCode).then(res => {
+        console.log(res);
+      });
+    } else {
+      this.setState({
+        wrongOtpMsg: "Wrong OTP entered../ Captcha not completed"
+      });
+    }
   };
 
   loginStatusCheck = () => {
@@ -134,9 +147,14 @@ export default class SignUp extends Component {
       });
   };
 
+  componentWillUnmount() {
+    this.fireBaseListener && this.fireBaseListener();
+    this.authListener = undefined;
+  }
+
   componentDidMount() {
     // this.updateProfileInfo();
-    
+
     window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
       "recaptcha-container",
       {
@@ -171,9 +189,8 @@ export default class SignUp extends Component {
       </div>
     );
 
-    return (
+    const signUpFrom = (
       <React.Fragment>
-        <div ref={capt => (this.recapt = capt)} id="recaptcha-container" />
         <h1 className="large bold title-margin">Sign up </h1>
         <span className="small-margin small-mr">Email : </span>
         <input
@@ -213,10 +230,18 @@ export default class SignUp extends Component {
           onChange={this.handleFile}
         />
         <br />
-        {this.state.promptVerCode ? codeElem : null}
 
         <button onClick={this.handleSignUp}>Sign Up</button>
-        <div>{this.state.loginMsg}</div>
+        <div>{this.state.msg}</div>
+      </React.Fragment>
+    );
+
+    return (
+      <React.Fragment>
+        <div ref={capt => (this.recapt = capt)} id="recaptcha-container" />
+        {this.state.showOTPField ? codeElem : signUpFrom}
+        {/* {this.state.promptVerCode ? codeElem : signUpFrom} */}
+        <h4>{this.state.wrongOtpMsg}</h4>
       </React.Fragment>
     );
   }
