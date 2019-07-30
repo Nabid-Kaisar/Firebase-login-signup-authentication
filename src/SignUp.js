@@ -16,7 +16,7 @@ export default class SignUp extends Component {
     promptVerCode: false,
     confirmationResult: null,
     showOTPField: false,
-    wrongOtpMsg: "",
+    errorMsg: "",
     recaptchaSolveMsg: ""
   };
 
@@ -124,12 +124,19 @@ export default class SignUp extends Component {
 
   handleCodeSubmit = () => {
     if (this.state.confirmationResult) {
-      this.state.confirmationResult.confirm(this.state.vCode).then(res => {
-        console.log(res);
-      });
+      this.state.confirmationResult
+        .confirm(this.state.vCode)
+        .then(res => {
+          console.log(res);
+        })
+        .catch(err => {
+          console.log(err);
+          this.setState({ errorMsg: "Wrong OTP entered" });
+        });
     } else {
+      //there might be 2 reason for the error
       this.setState({
-        wrongOtpMsg: "Wrong OTP entered../ Captcha not completed"
+        errorMsg: "Wrong OTP entered../ Captcha not completed"
       });
     }
   };
@@ -161,29 +168,13 @@ export default class SignUp extends Component {
     if (this.props.recaptchaResToken !== prevProps.recaptchaResToken) {
       if (this.props.recaptchaResToken !== "") {
         this.setState({ recaptchaSolveMsg: "" });
+        this.setState({ errorMsg: "" });
       }
     }
   }
 
   componentDidMount() {
     // this.updateProfileInfo();
-    // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-    //   "recaptcha-container",
-    //   {
-    //     size: "normal",
-    //     callback: response => {
-    //       this.setState({ resToken: response });
-    //     },
-    //     "expired-callback": () => {
-    //       // Response expired. Ask user to solve reCAPTCHA again.
-    //       // ...
-    //       console.log("expired");
-    //     }
-    //   }
-    // );
-    // window.recaptchaVerifier.render().then(r => {
-    //   window.recaptchaWidgetId = r;
-    // });
   }
 
   render() {
@@ -255,7 +246,7 @@ export default class SignUp extends Component {
         {/* <div ref={capt => (this.recapt = capt)} id="recaptcha-container" /> */}
         {this.state.showOTPField ? codeElem : signUpFrom}
         {/* {this.state.promptVerCode ? codeElem : signUpFrom} */}
-        <h4>{this.state.wrongOtpMsg}</h4>
+        <h4>{this.state.errorMsg}</h4>
       </React.Fragment>
     );
   }

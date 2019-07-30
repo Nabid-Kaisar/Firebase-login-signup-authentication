@@ -47,7 +47,8 @@ export default class Login extends Component {
     }
   };
 
-  registerOnStateChange = changeLoginState => {
+  registerOnStateChange = () => {
+    let changeLoginState = this.props.changeLoginState;
     firebase.auth().onAuthStateChanged(function(user) {
       //anytime a sign in state changed this callback fn will be invoked
       // changeLoginState(2);
@@ -80,25 +81,7 @@ export default class Login extends Component {
   }
 
   componentDidMount = () => {
-    this.registerOnStateChange(this.props.changeLoginState);
-
-    // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-    //   "recaptcha-container-login",
-    //   {
-    //     size: "normal",
-    //     callback: response => {
-    //       this.setState({ resToken: response });
-    //     },
-    //     "expired-callback": () => {
-    //       // Response expired. Ask user to solve reCAPTCHA again.
-    //       // ...
-    //       console.log("expired");
-    //     }
-    //   }
-    // );
-    // window.recaptchaVerifier.render().then(r => {
-    //   window.recaptchaWidgetId = r;
-    // });
+    this.registerOnStateChange();
   };
 
   render() {
