@@ -211,7 +211,7 @@ export default class SignUp extends Component {
         />
         <br />
 
-        <span className="small-margin small-mr">Phone : </span>
+        <span className="small-margin small-mr">Phone: </span>
         <input
           className="small-margin"
           type="text"
@@ -219,7 +219,7 @@ export default class SignUp extends Component {
         />
         <br />
 
-        <span className="small-margin small-mr">NickName : </span>
+        <span className="small-margin">NickName : </span>
         <input
           className="small-margin"
           type="text"
@@ -243,9 +243,8 @@ export default class SignUp extends Component {
 
     return (
       <React.Fragment>
-        {/* <div ref={capt => (this.recapt = capt)} id="recaptcha-container" /> */}
         {this.state.showOTPField ? codeElem : signUpFrom}
-        {/* {this.state.promptVerCode ? codeElem : signUpFrom} */}
+
         <h4>{this.state.errorMsg}</h4>
       </React.Fragment>
     );

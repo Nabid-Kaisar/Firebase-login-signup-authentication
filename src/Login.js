@@ -21,11 +21,11 @@ export default class Login extends Component {
     this.setState({ passWord: e.target.value });
   };
 
-  handleLogin =  async () => {
+  handleLogin = async () => {
     this.props.changeLoginState(2); //loading..
     const { email, passWord } = this.state;
     if (email !== "" && passWord !== "") {
-      let loginData = await  firebase
+      let loginData = await firebase
         .auth()
         .signInWithEmailAndPassword(email, passWord)
         .catch(error => {
@@ -37,11 +37,12 @@ export default class Login extends Component {
           console.log(errorMessage, errorCode);
           console.error(error);
         });
-        if(loginData){
-          //login succcessful with email & pass.. now check otp
-          this.setState({ showOTPField: true });
-          console.log(loginData);
-        }
+      if (loginData) {
+        //login succcessful with email & pass.. now check otp
+        this.setState({ showOTPField: true });
+      } else {
+        //wrong uname/pass msg
+      }
     } else {
       console.log("input fields cant be empty ");
     }
@@ -128,35 +129,9 @@ export default class Login extends Component {
 
     return (
       <React.Fragment>
-        {/* <div ref={capt => (this.recapt = capt)} id="recaptcha-container-login" /> */}
         {this.state.showOTPField ? codeElem : loginForm}
         <h4>{this.state.wrongOtpMsg}</h4>
       </React.Fragment>
     );
   }
 }
-
-/* <React.Fragment>
-        <h1 className="large bold title-margin">Login using firebase auth:</h1>
-        <span className="small-margin small-mr">Email : </span>
-        <input
-          className="small-margin"
-          type="text"
-          onChange={this.handleEmail}
-        />
-        <br />
-        <span className="small-margin">Password : </span>
-        <input
-          className="small-margin"
-          type="password"
-          onChange={this.handlePassword}
-        />
-        <br />
-        <button className="small-margin" onClick={this.handleLogin}>
-          Login
-        </button>
-        <div>{this.state.loginMsg}</div>
-        <button className="comp-margin" onClick={this.loginStatusCheck}>
-          Login status check
-        </button>
-      </React.Fragment> */

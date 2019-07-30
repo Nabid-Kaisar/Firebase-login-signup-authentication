@@ -48,3 +48,8 @@
 .hidden {
   display: none;
 }
+
+.captcha-pos {
+  position: relative;
+  left: 38%;
+}

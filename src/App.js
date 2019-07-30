@@ -36,7 +36,6 @@ export default class App extends Component {
         } else {
           this.setState({ isLoggedIn: 0 });
         }
-
         //update profile Info
       } else {
         this.setState({ isLoggedIn: 0 });
@@ -95,7 +94,11 @@ export default class App extends Component {
     } else if (isLoggedIn === 0) {
       return (
         <div className="App">
-          <div ref={capt => (this.recapt = capt)} id="recaptcha-container" />
+          <div
+            className="captcha-pos"
+            ref={capt => (this.recapt = capt)}
+            id="recaptcha-container"
+          />
           <Login
             recaptchaResToken={this.state.recaptchaResToken}
             changeLoginState={this.changeLoginState}
