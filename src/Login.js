@@ -40,7 +40,7 @@ export default class Login extends Component {
         if(loginData){
           //login succcessful with email & pass.. now check otp
           this.setState({ showOTPField: true });
-          console.log("loginData:",loginData);
+          console.log(loginData);
         }
     } else {
       console.log("input fields cant be empty ");
@@ -81,6 +81,24 @@ export default class Login extends Component {
 
   componentDidMount = () => {
     this.registerOnStateChange(this.props.changeLoginState);
+
+    // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+    //   "recaptcha-container-login",
+    //   {
+    //     size: "normal",
+    //     callback: response => {
+    //       this.setState({ resToken: response });
+    //     },
+    //     "expired-callback": () => {
+    //       // Response expired. Ask user to solve reCAPTCHA again.
+    //       // ...
+    //       console.log("expired");
+    //     }
+    //   }
+    // );
+    // window.recaptchaVerifier.render().then(r => {
+    //   window.recaptchaWidgetId = r;
+    // });
   };
 
   render() {
@@ -127,7 +145,7 @@ export default class Login extends Component {
 
     return (
       <React.Fragment>
-        <div ref={capt => (this.recapt = capt)} id="recaptcha-container-login" />
+        {/* <div ref={capt => (this.recapt = capt)} id="recaptcha-container-login" /> */}
         {this.state.showOTPField ? codeElem : loginForm}
         <h4>{this.state.wrongOtpMsg}</h4>
       </React.Fragment>

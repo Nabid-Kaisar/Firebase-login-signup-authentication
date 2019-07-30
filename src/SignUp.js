@@ -7,7 +7,7 @@ export default class SignUp extends Component {
   state = {
     email: "",
     passWord: "",
-    msg: "",
+    signUpFailedMsg: "",
     phone: "",
     nick: "",
     vCode: "",
@@ -16,7 +16,8 @@ export default class SignUp extends Component {
     promptVerCode: false,
     confirmationResult: null,
     showOTPField: false,
-    wrongOtpMsg: ""
+    wrongOtpMsg: "",
+    recaptchaSolveMsg: ""
   };
 
   handleEmail = e => {
@@ -76,15 +77,19 @@ export default class SignUp extends Component {
             });
 
           var provider = new firebase.auth.PhoneAuthProvider();
-          provider
-            .verifyPhoneNumber(this.state.phone, this.state.resToken)
-            .then(verificationId => {
-              var cred = firebase.auth.PhoneAuthProvider.credential(
-                verificationId,
-                this.state.vCode
-              );
-              user.updatePhoneNumber({ cred });
-            });
+          if (this.props.recaptchaResToken === "") {
+            this.setState({ recaptchaSolveMsg: "recaptcha not solved" });
+          } else {
+            provider
+              .verifyPhoneNumber(this.state.phone, this.props.recaptchaResToken)
+              .then(verificationId => {
+                var cred = firebase.auth.PhoneAuthProvider.credential(
+                  verificationId,
+                  this.state.vCode
+                );
+                user.updatePhoneNumber({ cred });
+              });
+          }
         }
       }
     });
@@ -98,7 +103,7 @@ export default class SignUp extends Component {
         .createUserWithEmailAndPassword(email, passWord)
         .catch(error => {
           // Handle Errors here.
-          this.setState({ msg: "signup failed" });
+          this.setState({ signUpFailedMsg: "signup failed" });
           console.error(error);
           console.log("cant register with that username / password");
           // ...
@@ -152,26 +157,33 @@ export default class SignUp extends Component {
     this.authListener = undefined;
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.recaptchaResToken !== prevProps.recaptchaResToken) {
+      if (this.props.recaptchaResToken !== "") {
+        this.setState({ recaptchaSolveMsg: "" });
+      }
+    }
+  }
+
   componentDidMount() {
     // this.updateProfileInfo();
-
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-      "recaptcha-container",
-      {
-        size: "normal",
-        callback: response => {
-          this.setState({ resToken: response });
-        },
-        "expired-callback": () => {
-          // Response expired. Ask user to solve reCAPTCHA again.
-          // ...
-          console.log("expired");
-        }
-      }
-    );
-    window.recaptchaVerifier.render().then(r => {
-      window.recaptchaWidgetId = r;
-    });
+    // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+    //   "recaptcha-container",
+    //   {
+    //     size: "normal",
+    //     callback: response => {
+    //       this.setState({ resToken: response });
+    //     },
+    //     "expired-callback": () => {
+    //       // Response expired. Ask user to solve reCAPTCHA again.
+    //       // ...
+    //       console.log("expired");
+    //     }
+    //   }
+    // );
+    // window.recaptchaVerifier.render().then(r => {
+    //   window.recaptchaWidgetId = r;
+    // });
   }
 
   render() {
@@ -186,6 +198,7 @@ export default class SignUp extends Component {
 
         <button onClick={this.handleCodeSubmit}> Submit </button>
         <br />
+        {this.state.recaptchaSolveMsg}
       </div>
     );
 
@@ -232,13 +245,14 @@ export default class SignUp extends Component {
         <br />
 
         <button onClick={this.handleSignUp}>Sign Up</button>
-        <div>{this.state.msg}</div>
+        <div>{this.state.signUpFailedMsg}</div>
+        <div>{this.state.recaptchaSolveMsg}</div>
       </React.Fragment>
     );
 
     return (
       <React.Fragment>
-        <div ref={capt => (this.recapt = capt)} id="recaptcha-container" />
+        {/* <div ref={capt => (this.recapt = capt)} id="recaptcha-container" /> */}
         {this.state.showOTPField ? codeElem : signUpFrom}
         {/* {this.state.promptVerCode ? codeElem : signUpFrom} */}
         <h4>{this.state.wrongOtpMsg}</h4>

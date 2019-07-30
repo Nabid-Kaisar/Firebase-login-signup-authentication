@@ -22,18 +22,18 @@ var app = firebase.initializeApp({
 
 export default class App extends Component {
   state = {
-    isLoggedIn: 2
+    isLoggedIn: 2,
+    recaptchaResToken: ""
   };
 
   registerOnAuthChange = () => {
-    
     this.fireBaseListener = firebase.auth().onAuthStateChanged(user => {
       console.log("app");
       console.log(user);
       if (user) {
         if (user.phoneNumber) {
           this.setState({ isLoggedIn: 1 });
-        }else{
+        } else {
           this.setState({ isLoggedIn: 0 });
         }
 
@@ -51,6 +51,23 @@ export default class App extends Component {
 
   componentDidMount = () => {
     this.registerOnAuthChange();
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+      "recaptcha-container",
+      {
+        size: "normal",
+        callback: response => {
+          this.setState({ recaptchaResToken: response });
+        },
+        "expired-callback": () => {
+          // Response expired. Ask user to solve reCAPTCHA again.
+          // ...
+          console.log("expired");
+        }
+      }
+    );
+    window.recaptchaVerifier.render().then(r => {
+      window.recaptchaWidgetId = r;
+    });
   };
 
   changeLoginState = status => {
@@ -63,14 +80,30 @@ export default class App extends Component {
   render() {
     let { isLoggedIn } = this.state;
     if (isLoggedIn === 2) {
-      return <Loading />;
+      return (
+        <React.Fragment>
+          <div
+            className="hidden"
+            ref={capt => (this.recapt = capt)}
+            id="recaptcha-container"
+          />
+          <Loading />
+        </React.Fragment>
+      );
     } else if (isLoggedIn === 1) {
       return <MainPage changeLoginState={this.changeLoginState} />;
     } else if (isLoggedIn === 0) {
       return (
         <div className="App">
-          <Login changeLoginState={this.changeLoginState} />
-          <SignUp changeLoginState={this.changeLoginState} />
+          <div ref={capt => (this.recapt = capt)} id="recaptcha-container" />
+          <Login
+            recaptchaResToken={this.state.recaptchaResToken}
+            changeLoginState={this.changeLoginState}
+          />
+          <SignUp
+            recaptchaResToken={this.state.recaptchaResToken}
+            changeLoginState={this.changeLoginState}
+          />
         </div>
       );
     } else return <Loading />;

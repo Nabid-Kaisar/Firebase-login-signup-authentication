@@ -44,3 +44,7 @@
 .small-mr {
   margin-right: 30px;
 }
+
+.hidden {
+  display: none;
+}
