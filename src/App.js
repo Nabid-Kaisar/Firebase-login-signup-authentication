@@ -56,23 +56,23 @@ export default class App extends Component {
 
   componentDidMount = () => {
     this.registerOnAuthChange();
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-      "recaptcha-container",
-      {
-        size: "normal",
-        callback: response => {
-          this.setState({ recaptchaResToken: response });
-        },
-        "expired-callback": () => {
-          // Response expired. Ask user to solve reCAPTCHA again.
-          // ...
-          console.log("expired");
-        }
-      }
-    );
-    window.recaptchaVerifier.render().then(r => {
-      window.recaptchaWidgetId = r;
-    });
+    // window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+    //   "recaptcha-container",
+    //   {
+    //     size: "normal",
+    //     callback: response => {
+    //       this.setState({ recaptchaResToken: response });
+    //     },
+    //     "expired-callback": () => {
+    //       // Response expired. Ask user to solve reCAPTCHA again.
+    //       // ...
+    //       console.log("expired");
+    //     }
+    //   }
+    // );
+    // window.recaptchaVerifier.render().then(r => {
+    //   window.recaptchaWidgetId = r;
+    // });
   };
 
   changeLoginState = status => {
@@ -100,11 +100,11 @@ export default class App extends Component {
     } else if (isLoggedIn === 0) {
       return (
         <div className="App">
-          <div
+          {/* <div
             className="captcha-pos"
             ref={capt => (this.recapt = capt)}
             id="recaptcha-container"
-          />
+          /> */}
           <Login
             recaptchaResToken={this.state.recaptchaResToken}
             changeLoginState={this.changeLoginState}
