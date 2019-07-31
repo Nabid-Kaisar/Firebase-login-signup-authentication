@@ -9,6 +9,9 @@ import "./App.css";
 
 import { firebase } from "@firebase/app";
 import "@firebase/auth";
+import "@firebase/database";
+import 'firebase/firestore';
+
 
 var app = firebase.initializeApp({
   apiKey: "AIzaSyBSmyJLAZ2fqN7Crx5U2H51Z7wxWV-8-vI",
@@ -27,15 +30,18 @@ export default class App extends Component {
   };
 
   registerOnAuthChange = () => {
+
     this.fireBaseListener = firebase.auth().onAuthStateChanged(user => {
       console.log("app");
       console.log(user);
+
       if (user) {
-        if (user.phoneNumber) {
-          this.setState({ isLoggedIn: 1 });
-        } else {
-          this.setState({ isLoggedIn: 0 });
-        }
+        this.setState({ isLoggedIn: 1 });
+        // if (user.phoneNumber) {
+        //   this.setState({ isLoggedIn: 1 });
+        // } else {
+        //   this.setState({ isLoggedIn: 0 });
+        // }
         //update profile Info
       } else {
         this.setState({ isLoggedIn: 0 });

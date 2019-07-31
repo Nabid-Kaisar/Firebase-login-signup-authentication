@@ -2,6 +2,8 @@ import React, { Component } from "react";
 
 import { firebase } from "@firebase/app";
 import "@firebase/auth";
+import "@firebase/database";
+import 'firebase/firestore';
 
 export default class SignUp extends Component {
   state = {
@@ -43,6 +45,17 @@ export default class SignUp extends Component {
   handleFile = e => {
     this.setState({ file: e.target.value });
   };
+
+  encodeEmail = email => {
+    return email.replace(".", ",");
+  };
+
+  writeUserData(email, name, phoneNumber) {
+    firebase.database().ref(`users/${email}` ).set({
+      name: name,
+      phone: phoneNumber
+    });
+  }
 
   updateProfileInfo = () => {
     this.fireBaseListener = firebase.auth().onAuthStateChanged(user => {
@@ -89,6 +102,7 @@ export default class SignUp extends Component {
                 );
                 user.updatePhoneNumber({ cred });
                 console.log("update phn no", user.updatePhoneNumber({ cred }));
+                
               });
           }
         }
@@ -111,6 +125,8 @@ export default class SignUp extends Component {
         });
 
       if (signUpData) {
+        //uploading user data to database
+        this.writeUserData(this.encodeEmail(email),this.state.nick, this.state.phone);
         //successful
         this.setState({ showOTPField: true });
 

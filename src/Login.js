@@ -40,7 +40,7 @@ export default class Login extends Component {
       if (loginData) {
         //login succcessful with email & pass.. now check otp
         console.log(firebase.auth().currentUser);
-        this.setState({ showOTPField: true });
+        // this.setState({ showOTPField: true });
         console.log("loginData: ", loginData);
       } else {
         //wrong uname/pass msg
@@ -59,12 +59,15 @@ export default class Login extends Component {
       console.log("login");
       console.log(user);
       if (user) {
+
+        changeLoginState(1);
         // User is signed in.
-        if (user.phoneNumber) {
-          changeLoginState(1);
-        } else {
-          changeLoginState(0);
-        }
+        // if (user.phoneNumber) {
+        //   changeLoginState(1);
+        // } else {
+        //   // changeLoginState(0);
+        //   //fetch phone no from db
+        // }
       } else {
         changeLoginState(0);
         console.log("no user");
