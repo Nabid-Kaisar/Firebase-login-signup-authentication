@@ -39,9 +39,12 @@ export default class Login extends Component {
         });
       if (loginData) {
         //login succcessful with email & pass.. now check otp
+        console.log(firebase.auth().currentUser);
         this.setState({ showOTPField: true });
+        console.log("loginData: ", loginData);
       } else {
         //wrong uname/pass msg
+        console.log("wrong uname/password");
       }
     } else {
       console.log("input fields cant be empty ");

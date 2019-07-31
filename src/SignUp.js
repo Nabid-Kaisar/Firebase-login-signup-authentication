@@ -88,6 +88,7 @@ export default class SignUp extends Component {
                   this.state.vCode
                 );
                 user.updatePhoneNumber({ cred });
+                console.log("update phn no", user.updatePhoneNumber({ cred }));
               });
           }
         }
@@ -174,7 +175,7 @@ export default class SignUp extends Component {
   }
 
   componentDidMount() {
-    // this.updateProfileInfo();
+    this.updateProfileInfo();
   }
 
   render() {
