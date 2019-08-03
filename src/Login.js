@@ -76,11 +76,11 @@ export default class Login extends Component {
     });
   };
 
-  loginStatusCheck = () => {
-    const user = firebase.auth().currentUser;
-    //if not logged in user will return null..
-    console.log(user);
-  };
+  // loginStatusCheck = () => {
+  //   const user = firebase.auth().currentUser;
+  //   //if not logged in user will return null..
+  //   console.log(user);
+  // };
 
   componentWillUnmount() {
     this.fireBaseListener && this.fireBaseListener();
@@ -113,9 +113,9 @@ export default class Login extends Component {
           Login
         </button>
         <div>{this.state.loginMsg}</div>
-        <button className="comp-margin" onClick={this.loginStatusCheck}>
+        {/* <button className="comp-margin" onClick={this.loginStatusCheck}>
           Login status check
-        </button>
+        </button> */}
       </React.Fragment>
     );
 

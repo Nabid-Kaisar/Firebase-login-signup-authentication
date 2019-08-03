@@ -4,6 +4,7 @@ import { firebase } from "@firebase/app";
 import "@firebase/auth";
 import "@firebase/database";
 import 'firebase/firestore';
+import "@firebase/storage";
 
 export default class SignUp extends Component {
   state = {
@@ -14,12 +15,14 @@ export default class SignUp extends Component {
     nick: "",
     vCode: "",
     resToken: "",
-    file: {},
+    selectedFile: null,
     promptVerCode: false,
     confirmationResult: null,
     showOTPField: false,
     errorMsg: "",
-    recaptchaSolveMsg: ""
+    recaptchaSolveMsg: "",
+    mainImage: null,
+    fileNameEx: ""
   };
 
   handleEmail = e => {
@@ -43,18 +46,52 @@ export default class SignUp extends Component {
   };
 
   handleFile = e => {
-    this.setState({ file: e.target.value });
+    this.setState({ selectedFile: e.target.files[0], loaded: 0 },()=>{
+      const fileElem = this.inputElm.files[0];
+    
+      let file = fileElem;
+      const stroageRef = firebase.storage().ref('/images');
+      var fileName = Date.now();
+      var fileNameEx = fileName + "." + file.type.split("/")[1];
+      this.setState({fileNameEx});
+      const mainImage = stroageRef.child(fileNameEx);
+
+      this.setState({mainImage})
+    });
+
   };
 
   encodeEmail = email => {
-    return email.replace(".", ",");
+    return email.replace(".", "_");
   };
 
   writeUserData(email, name, phoneNumber) {
-    firebase.database().ref(`users/${email}` ).set({
-      name: name,
-      phone: phoneNumber
-    });
+
+    // const file = this.inputElm.files[0];
+    // let file = document.getElementById("file-up");
+    // console.log(file);
+    // file = file.files[0];
+    // const stroageRef = firebase.storage().ref('/images');
+    // var fileName = Date.now();
+    // var fileNameEx = fileName + "." + file.type.split("/")[1];
+    // console.log(fileNameEx);
+    // const mainImage = stroageRef.child("" + fileName);
+    if(this.state.mainImage !== null){
+      this.state.mainImage.put(this.state.selectedFile).then((res)=>{
+        console.log(res)
+      })
+      
+  
+  
+      firebase.database().ref(`users/${email}` ).set({
+        name: name,
+        phone: phoneNumber,
+        imageName: this.state.fileNameEx
+      });
+    }else {
+      console.log("no image")
+    }
+
   }
 
   updateProfileInfo = () => {
@@ -128,9 +165,9 @@ export default class SignUp extends Component {
         //uploading user data to database
         this.writeUserData(this.encodeEmail(email),this.state.nick, this.state.phone);
         //successful
-        this.setState({ showOTPField: true });
+         this.setState({ showOTPField: true });
 
-        this.updateProfileInfo();
+         this.updateProfileInfo();
 
         console.log(signUpData);
       }
@@ -190,9 +227,25 @@ export default class SignUp extends Component {
     }
   }
 
+  // uploadImg = () => {
+  //   const file = this.inputElm.files[0];
+  //   console.log(file)
+  //   const stroageRef = firebase.storage().ref('/images');
+  //   var fileName = Date.now();
+  //   var fileNameEx = fileName + "." + file.type.split("/")[1];
+  //   console.log(fileNameEx);
+  //   const mainImage = stroageRef.child("" + fileName);
+  //   mainImage.put(file).then((res)=>{
+  //     console.log(res)
+  //   })
+  //   console.log(mainImage);
+  // }
+
+
   componentDidMount() {
     this.updateProfileInfo();
   }
+
 
   render() {
     const codeElem = (
@@ -243,15 +296,15 @@ export default class SignUp extends Component {
           onChange={this.handleNick}
         />
         <br />
-
         <span className="small-margin small-mr">Image : </span>
         <input
           className="small-margin"
+          id="file-up"
           type="file"
           onChange={this.handleFile}
+          ref={inpElm=> this.inputElm = inpElm}
         />
-        <br />
-
+    <br />
         <button onClick={this.handleSignUp}>Sign Up</button>
         <div>{this.state.signUpFailedMsg}</div>
         <div>{this.state.recaptchaSolveMsg}</div>
@@ -261,7 +314,9 @@ export default class SignUp extends Component {
     return (
       <React.Fragment>
         {this.state.showOTPField ? codeElem : signUpFrom}
-
+        
+        {/* <br />
+        <button onClick ={this.uploadImg}>Upload Img</button> */}
         <h4>{this.state.errorMsg}</h4>
       </React.Fragment>
     );
