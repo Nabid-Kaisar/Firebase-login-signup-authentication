@@ -5,32 +5,22 @@ import "@firebase/auth";
 import "@firebase/database";
 import "firebase/firestore";
 import "firebase/storage";
-import { async } from "@firebase/util";
 
 export default class MainPage extends Component {
   state = {
-    recaptchaResToken: "",
-    phoneNumber: "",
-    confirmationResult: null,
-    vCode: "",
     profilePhotoUrl: "",
     profilePhotoName: "",
-    imageName: "",
-    isCodeSent: "",
-    isVerifySuccess: ""
+    checked: false,
+    userEmail: ""
   };
 
   handleDisplayImage = () => {
-    console.log(firebase.auth().currentUser);
-    var userEmail = this.encodeEmail(firebase.auth().currentUser.email);
-    console.log(userEmail);
-    let promise = this.readUserData(userEmail);
-    console.log(promise);
+    var userEmail = this.encodeEmail(this.state.userEmail);
+    console.log(userEmail)
+    let promise = this.readData(userEmail);
     promise.then(async snapshot => {
       var imageName =
         (snapshot.val() && snapshot.val().imageName) || "Anonymous";
-      // ...
-      console.log(imageName);
       this.setState(
         {
           profilePhotoName: imageName
@@ -58,191 +48,147 @@ export default class MainPage extends Component {
       });
   }
 
+  handleCheckBoxClick = () => {
+    if (this.state.checked) {
+      this.setState({ checked: false });
+    } else {
+      this.setState({ checked: true });
+    }
+  };
+
+  setTwoFactorAuthForUser = () => {
+    console.log(this.state.checked);
+    var userEmail = this.encodeEmail(this.state.userEmail);
+    firebase
+      .database()
+      .ref(`users/${userEmail}`)
+      .update({
+        enableTwoFactorAuth: this.state.checked
+      });
+  };
+
   getUserData = async () => {
-    var userEmail = this.encodeEmail(firebase.auth().currentUser.email);
-    console.log(userEmail);
-    let promise = this.readUserData(userEmail);
+    var user = this.encodeEmail(this.state.userEmail);
+    console.log(user);
+    let promise = this.readData(user);
     return promise;
   };
 
-  readUserData = email => {
+  readData = email => {
     return firebase
       .database()
       .ref(`users/${email}`)
       .once("value");
   };
 
+  displayUserData = () => {
+    var prom = this.getUserData();
+    prom.then(async snapshot => {
+      if (snapshot.val()) {
+        console.log(snapshot.val());
+      }
+    });
+  };
+
+  encodeEmail = email => {
+    if (email) {
+      return email.replace(".", "_");
+    } else {
+      return "Email invalid";
+    }
+  };
+
+  createCookie = (value, days) => {
+    var expires = "";
+    if (days) {
+      var date = new Date();
+      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+      expires = date.toGMTString();
+    } else expires = "";
+    document.cookie = `userEmail=${value};expires=${expires};path=/`;
+    console.log(document.cookie);
+  };
+
+  readCookie = () => {
+    var nameEQ = "userEmail=";
+    var ca = document.cookie.split(";");
+    for (var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) === " ") c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0) {
+        return c.substring(nameEQ.length, c.length);
+      }
+    }
+    return null;
+  };
+
   handleLogout = () => {
+    this.createCookie("", -1);
     firebase
       .auth()
       .signOut()
       .then(() => {
-        this.props.changeLoginState(0);
+        this.setState({ userEmail: "" }, () => {
+          this.createCookie("", -1);
+          this.props.changeLoginState(0);
+        });
       })
       .catch(err => {
         console.error(err);
       });
   };
 
-  encodeEmail = email => {
-    if (email){
-      return email.replace(".", "_")
-    }else{
-      return "error"
-    }
-  };
-
-  handleDisplayLoginData = () => {
-    let promise = this.getUserData();
-    promise.then(res=>{
-      console.log(res)
-    }).catch(err=>{
-      console.error(err);
-    })
-  };
-
-  handleVCode = e => {
-    this.setState({ vCode: e.target.value });
-  };
-
-  matchVCode = () => {
-    console.log(this.state.confirmationResult);
-    if (this.state.confirmationResult) {
-      this.state.confirmationResult
-        .confirm(this.state.vCode)
-        .then(res => {
-          console.log(res);
-          console.log("phone verification successful");
-          this.setState({isVerifySuccess: "verification successful"});
-        })
-        .catch(err => {
-          console.log(err);
-          console.log("phone verification unsuccessful");
-          this.setState({isVerifySuccess: "verification unsuccessful"});
-        });
-    } else {
-      //there might be 2 reason for the error
-      this.setState({isVerifySuccess: "no confirmation res/ Captcha not completed or Wrong OTP entered"});
-      console.log("no confirmation res/ Wrong OTP entered../ Captcha not completed");
-    }
-  };
-
-  sendCode = async () => {
-    var appVerifier = window.recaptchaVerifier;
-    console.log(appVerifier)
-    let prom = this.getUserData();
-    prom.then(snapshot => {
-      var phoneNumber = (snapshot.val() && snapshot.val().phone) || "Anonymous";
-      console.log(phoneNumber);
-
-      var provider = new firebase.auth.PhoneAuthProvider();
-      console.log(provider);
-      // provider
-      //   .verifyPhoneNumber(phoneNumber, appVerifier)
-      //   .then(verificationId => {
-      //     console.log(verificationId);
-      //     // var cred = firebase.auth.PhoneAuthProvider.credential(
-      //     //   verificationId,
-      //     //   this.state.vCode
-      //     // );
-      //     // console.log(cred);
-      //     // user.updatePhoneNumber({ cred });
-      //     // console.log("update phn no", user.updatePhoneNumber({ cred }));
-      //   })
-      //   .catch(err => {
-      //     console.log("err");
-      //   });
-      if (this.state.confirmationResult){
-        console.log("confor")
-      }
-
-      if (phoneNumber && appVerifier) {
-        console.log(appVerifier)
-        firebase
-          .auth()
-          .signInWithPhoneNumber(phoneNumber, appVerifier)
-          .then(async confirmationResult => {
-            console.log("conf res");
-            console.log(confirmationResult);
-            if(confirmationResult){
-              this.setState({isCodeSent: "Code sent successful"});
-            }else{
-              this.setState({isCodeSent: "error sending code"});
-            }
-            await this.setState({
-              confirmationResult
-            });
-          })
-          .catch(error => {
-            this.setState({isCodeSent: "error sending code"});
-            console.log(error);
-          });
-      }else{
-        this.setState({isCodeSent: "error sending code"});
-        console.log(appVerifier );
-      }
-    });
-  };
-
   componentDidMount() {
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
-      "recaptcha-container",
-      {
-        size: "normal",
-        callback: response => {
-          console.log("captch res: ", response);
-          this.setState({ recaptchaResToken: response });
-        },
-        "expired-callback": () => {
-          console.log("expired");
+    this.setState({ userEmail: this.readCookie() }, () => {
+      console.log("read cookie is called");
+      let promise = this.getUserData();
+      promise.then(async snapshot => {
+        var isEnabledTwoFactorAuth = false;
+        if (snapshot.val() && snapshot.val().enableTwoFactorAuth) {
+          isEnabledTwoFactorAuth = snapshot.val().enableTwoFactorAuth;
         }
-      }
-    );
-    window.recaptchaVerifier.render().then(r => {
-      window.recaptchaWidgetId = r;
+
+        this.setState({ checked: isEnabledTwoFactorAuth });
+        if (isEnabledTwoFactorAuth) {
+          document.getElementById("checkbox").checked = true;
+        } else {
+          document.getElementById("checkbox").checked = false;
+        }
+      });
     });
   }
 
   render() {
     return (
       <React.Fragment>
-        <div
-          className="captcha-pos"
-          ref={capt => (this.recapt = capt)}
-          id="recaptcha-container"
-        />
-        <div>Successfully Logged in to the main page</div>
+        <h1 className="large bold title-margin">Successfully Logged in</h1>
         <br />
         <button onClick={this.handleDisplayImage}>Display Image</button>
         <br />
         <br />
-        <button onClick={this.handleDisplayLoginData}>Display Data</button>
+        <button onClick={this.displayUserData}>Display User Data</button>
         <br />
         <br />
-        <button onClick={this.sendCode}>Send Code</button>
+        <span>Two factor authentication:</span>
+        <input
+          type="checkbox"
+          onChange={this.handleCheckBoxClick}
+          className="filled-in"
+          id="checkbox"
+        />
+        <br />
+        <button onClick={this.setTwoFactorAuthForUser}>Save Settings</button>
         <br />
         <br />
-        <div>{this.state.isCodeSent}</div>
-        <br/>
-        <span>Enter Verfication code here:</span>
-        <br />
-        <br />
-        <input onChange={this.handleVCode} />
-        <br />
-        <br />
-        <button onClick={this.matchVCode}>Submit and match vCode</button>
-        <br />
-        <br />
-        <div>{this.state.isVerifySuccess}</div>
-        <br/>
         <button onClick={this.handleLogout}>Logout</button>
+        <br />
         <br />
         <div>
           <img
             height="150px"
             width="250px"
             src={this.state.profilePhotoUrl}
-            alt="profile image"
+            alt=""
           />
         </div>
       </React.Fragment>

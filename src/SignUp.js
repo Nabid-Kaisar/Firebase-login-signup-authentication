@@ -3,7 +3,7 @@ import React, { Component } from "react";
 import { firebase } from "@firebase/app";
 import "@firebase/auth";
 import "@firebase/database";
-import 'firebase/firestore';
+import "firebase/firestore";
 import "@firebase/storage";
 
 export default class SignUp extends Component {
@@ -13,14 +13,7 @@ export default class SignUp extends Component {
     signUpFailedMsg: "",
     phone: "",
     nick: "",
-    vCode: "",
-    resToken: "",
     selectedFile: null,
-    promptVerCode: false,
-    confirmationResult: null,
-    showOTPField: false,
-    errorMsg: "",
-    recaptchaSolveMsg: "",
     mainImage: null,
     fileNameEx: ""
   };
@@ -41,176 +34,27 @@ export default class SignUp extends Component {
     this.setState({ nick: e.target.value });
   };
 
-  handleVCode = e => {
-    this.setState({ vCode: e.target.value });
-  };
-
   handleFile = e => {
-    this.setState({ selectedFile: e.target.files[0], loaded: 0 },()=>{
+    this.setState({ selectedFile: e.target.files[0], loaded: 0 }, () => {
       const fileElem = this.inputElm.files[0];
-    
+
       let file = fileElem;
-      const stroageRef = firebase.storage().ref('/images');
+      const stroageRef = firebase.storage().ref("/images");
       var fileName = Date.now();
       var fileNameEx = fileName + "." + file.type.split("/")[1];
-      this.setState({fileNameEx});
+      this.setState({ fileNameEx });
       const mainImage = stroageRef.child(fileNameEx);
 
-      this.setState({mainImage})
+      this.setState({ mainImage });
     });
-
   };
 
   encodeEmail = email => {
-    return email.replace(".", "_");
-  };
-
-  writeUserData(email, name, phoneNumber) {
-
-    // const file = this.inputElm.files[0];
-    // let file = document.getElementById("file-up");
-    // console.log(file);
-    // file = file.files[0];
-    // const stroageRef = firebase.storage().ref('/images');
-    // var fileName = Date.now();
-    // var fileNameEx = fileName + "." + file.type.split("/")[1];
-    // console.log(fileNameEx);
-    // const mainImage = stroageRef.child("" + fileName);
-    if(this.state.mainImage !== null){
-      this.state.mainImage.put(this.state.selectedFile).then((res)=>{
-        console.log(res)
-      })
-      
-  
-  
-      firebase.database().ref(`users/${email}` ).set({
-        name: name,
-        phone: phoneNumber,
-        imageName: this.state.fileNameEx
-      });
-    }else {
-      console.log("no image")
-    }
-
-  }
-
-  updateProfileInfo = () => {
-    this.fireBaseListener = firebase.auth().onAuthStateChanged(user => {
-      console.log("signup");
-      console.log(user);
-      if (user) {
-        user.updateProfile({
-          displayName: this.state.nick
-        });
-
-        var appVerifier = window.recaptchaVerifier;
-        if (this.state.phone !== "" && appVerifier) {
-          console.log(this.state.phone);
-          console.log(appVerifier);
-
-          firebase
-            .auth()
-            .signInWithPhoneNumber(this.state.phone, appVerifier)
-            .then(async confirmationResult => {
-              this.setState(
-                {
-                  confirmationResult
-                },
-                () => {
-                  this.setState({ promptVerCode: true });
-                }
-              );
-            })
-            .catch(error => {
-              // Error; SMS not sent
-              console.log(error);
-            });
-
-          var provider = new firebase.auth.PhoneAuthProvider();
-          if (this.props.recaptchaResToken === "") {
-            this.setState({ recaptchaSolveMsg: "recaptcha not solved" });
-          } else {
-            provider
-              .verifyPhoneNumber(this.state.phone, this.props.recaptchaResToken)
-              .then(verificationId => {
-                var cred = firebase.auth.PhoneAuthProvider.credential(
-                  verificationId,
-                  this.state.vCode
-                );
-                user.updatePhoneNumber({ cred });
-                console.log("update phn no", user.updatePhoneNumber({ cred }));
-                
-              });
-          }
-        }
-      }
-    });
-  };
-
-  handleSignUp = async () => {
-    const { email, passWord } = this.state;
-    if (email !== "" && passWord !== "") {
-      let signUpData = await firebase
-        .auth()
-        .createUserWithEmailAndPassword(email, passWord)
-        .catch(error => {
-          // Handle Errors here.
-          this.setState({ signUpFailedMsg: "signup failed" });
-          console.error(error);
-          console.log("cant register with that username / password");
-          // ...
-        });
-
-      if (signUpData) {
-        //uploading user data to database
-        this.writeUserData(this.encodeEmail(email),this.state.nick, this.state.phone);
-        //successful
-         this.setState({ showOTPField: true });
-
-         this.updateProfileInfo();
-
-        console.log(signUpData);
-      }
+    if (email) {
+      return email.replace(".", "_");
     } else {
-      console.log("input fields cant be empty ");
+      return "Email invalid";
     }
-  };
-
-  handleCodeSubmit = () => {
-    if (this.state.confirmationResult) {
-      this.state.confirmationResult
-        .confirm(this.state.vCode)
-        .then(res => {
-          console.log(res);
-        })
-        .catch(err => {
-          console.log(err);
-          this.setState({ errorMsg: "Wrong OTP entered" });
-        });
-    } else {
-      //there might be 2 reason for the error
-      this.setState({
-        errorMsg: "Wrong OTP entered../ Captcha not completed"
-      });
-    }
-  };
-
-  loginStatusCheck = () => {
-    const user = firebase.auth().currentUser;
-    //if not logged in user will return null..
-    console.log(user);
-  };
-
-  handleLogout = () => {
-    firebase
-      .auth()
-      .signOut()
-      .then(() => {
-        console.log("successfully signed out");
-      })
-      .catch(err => {
-        console.error(err);
-      });
   };
 
   componentWillUnmount() {
@@ -218,52 +62,107 @@ export default class SignUp extends Component {
     this.authListener = undefined;
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.recaptchaResToken !== prevProps.recaptchaResToken) {
-      if (this.props.recaptchaResToken !== "") {
-        this.setState({ recaptchaSolveMsg: "" });
-        this.setState({ errorMsg: "" });
-      }
+  createCookie = (value, days) => {
+    var expires = "";
+    if (days) {
+      var date = new Date();
+      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+      expires = date.toGMTString();
+    } else expires = "";
+    document.cookie = `userEmail=${value};expires=${expires};path=/`;
+  };
+
+  writeUserData(ecodedEmail, email, name, phoneNumber) {
+    //debugger
+    if (this.state.mainImage !== null) {
+      this.state.mainImage.put(this.state.selectedFile).then(res => {
+        console.log(res);
+      });
+
+      //error to store data to firebase db delele user from auth
+      var sData = firebase
+        .database()
+        .ref(`users/${ecodedEmail}`)
+        .set(
+          {
+            email: email,
+            name: name,
+            phone: phoneNumber,
+            imageName: this.state.fileNameEx,
+            enableTwoFactorAuth: false
+          },(error) => {
+            //delete user form here
+            if(error){
+              //this.deleteUser();
+            }            
+          }
+        );
+
+        if (sData){
+          this.createCookie(email, 1);
+        }
+
+      console.log(sData);
+
+      //this.props.changeLoginState(3)
+      this.createCookie(this.state.email, 1);
+    } else {
+      console.log("no image");
     }
   }
 
-  // uploadImg = () => {
-  //   const file = this.inputElm.files[0];
-  //   console.log(file)
-  //   const stroageRef = firebase.storage().ref('/images');
-  //   var fileName = Date.now();
-  //   var fileNameEx = fileName + "." + file.type.split("/")[1];
-  //   console.log(fileNameEx);
-  //   const mainImage = stroageRef.child("" + fileName);
-  //   mainImage.put(file).then((res)=>{
-  //     console.log(res)
-  //   })
-  //   console.log(mainImage);
-  // }
+  handleSignUp = async () => {
+    this.createCookie("", -1);
+    console.log("create cookie called");
+    if (
+      this.state.email !== "" &&
+      this.state.passWord !== "" &&
+      this.state.phone !== "" &&
+      this.state.selectedFile !== null
+    ) {
+      let signUpData = await firebase
+        .auth()
+        .createUserWithEmailAndPassword(this.state.email, this.state.passWord)
+        .catch(error => {
+          if (error) {
+            alert("can not register with this username / password");
+          } else {
+            console.log("successfully sign up");
+          }
+        });
 
+      if (signUpData) {
+        this.createCookie(this.state.email, 1);
+        //uploading user data to database
+        this.writeUserData(
+          this.encodeEmail(this.state.email),
+          this.state.email,
+          this.state.nick,
+          this.state.phone
+        );
+      } else {
+        //alert("somethings went wrong");
+      }
+    } else {
+      alert("input fields cant be empty");
+    }
+  };
 
-  componentDidMount() {
-    this.updateProfileInfo();
-  }
-
+  // deleteUser = () => {
+  //   var user = firebase.auth().currentUser;
+  //   user
+  //     .delete()
+  //     .then(() => {
+  //       console.log("deleted user");
+  //       // User deleted.
+  //     })
+  //     .catch(error => {
+  //       // An error happened.
+  //     });
+  // };
 
   render() {
-    const codeElem = (
-      <div>
-        <span className="small-margin small-mr">CODE : </span>
-        <input
-          className="small-margin"
-          type="text"
-          onChange={this.handleVCode}
-        />
-
-        <button onClick={this.handleCodeSubmit}> Submit </button>
-        <br />
-        {this.state.recaptchaSolveMsg}
-      </div>
-    );
-
-    const signUpFrom = (
+    return (
       <React.Fragment>
         <h1 className="large bold title-margin">Sign up </h1>
         <span className="small-margin small-mr">Email : </span>
@@ -280,7 +179,6 @@ export default class SignUp extends Component {
           onChange={this.handlePassword}
         />
         <br />
-
         <span className="small-margin small-mr">Phone: </span>
         <input
           className="small-margin"
@@ -288,7 +186,6 @@ export default class SignUp extends Component {
           onChange={this.handlePhone}
         />
         <br />
-
         <span className="small-margin">NickName : </span>
         <input
           className="small-margin"
@@ -302,22 +199,10 @@ export default class SignUp extends Component {
           id="file-up"
           type="file"
           onChange={this.handleFile}
-          ref={inpElm=> this.inputElm = inpElm}
+          ref={inpElm => (this.inputElm = inpElm)}
         />
-    <br />
+        <br />
         <button onClick={this.handleSignUp}>Sign Up</button>
-        <div>{this.state.signUpFailedMsg}</div>
-        <div>{this.state.recaptchaSolveMsg}</div>
-      </React.Fragment>
-    );
-
-    return (
-      <React.Fragment>
-        {this.state.showOTPField ? codeElem : signUpFrom}
-        
-        {/* <br />
-        <button onClick ={this.uploadImg}>Upload Img</button> */}
-        <h4>{this.state.errorMsg}</h4>
       </React.Fragment>
     );
   }
